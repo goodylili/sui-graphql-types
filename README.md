@@ -6,12 +6,12 @@ It automatically generates selection sets for objects, interfaces, and unions (u
 
 ## Features
 
-- 🚀 **Zero Config**: Just provide the endpoint URL.
-- 📦 **Complete Coverage**: Generates operations for every Query and Mutation field defined in the schema.
-- 🌲 **Smart Selection**: Recursively builds selection sets for Objects and Interfaces (default depth: 3).
-- 🔀 **Union Support**: Automatically generates inline fragments for Union types.
-- 💅 **Prettified**: Output is automatically formatted using Prettier.
-- 📂 **Flexible Output**: Defaults to `query.graphql`, or specify your own output path.
+- **Zero Config**: Just provide the endpoint URL.
+- **Complete Coverage**: Generates operations for every Query and Mutation field defined in the schema.
+- **Smart Selection**: Recursively builds selection sets for Objects and Interfaces (default depth: 3).
+- **Union Support**: Automatically generates inline fragments for Union types.
+- **Prettified**: Output is automatically formatted using Prettier.
+- **Flexible Output**: Defaults to `query.graphql`, or specify your own output path.
 
 ## Usage
 
