@@ -9,23 +9,15 @@ import {
   isNonNullType,
   isInterfaceType,
   isUnionType,
+  getIntrospectionQuery,
 } from 'graphql';
 import type {
   IntrospectionQuery,
   GraphQLSchema,
-  GraphQLObjectType,
   GraphQLField,
   GraphQLType,
-  GraphQLArgument,
 } from 'graphql';
 import * as prettier from 'prettier';
-
-const schemaPath = path.join(__dirname, '../sui_mainnet_schema.json');
-const schemaJson = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
-
-// Handle both raw introspection result and { data: ... } wrapper
-const introspectionData = schemaJson.data ? schemaJson.data : schemaJson;
-const schema: GraphQLSchema = buildClientSchema(introspectionData as IntrospectionQuery);
 
 const MAX_DEPTH = 3;
 
@@ -54,14 +46,10 @@ function generateFieldSelection(type: GraphQLType, depth: number = 0): string {
     const fields = unwrappedType.getFields();
     const selection = Object.values(fields)
       .map((field) => {
-        // Skip deprecated fields if you want clean output
-        // if (field.deprecationReason) return null;
-        
         const fieldType = getUnwrappedType(field.type);
         if (isScalarType(fieldType)) {
             return field.name;
         }
-        // Only recurse for objects if we have depth left
         if (depth < MAX_DEPTH) {
             const subSelection = generateFieldSelection(field.type, depth + 1);
             if (subSelection) {
@@ -77,7 +65,6 @@ function generateFieldSelection(type: GraphQLType, depth: number = 0): string {
   }
 
   if (isUnionType(unwrappedType)) {
-      // For unions, we need inline fragments
       const types = unwrappedType.getTypes();
       const selection = types.map(t => {
           const subSelection = generateFieldSelection(t, depth + 1);
@@ -98,7 +85,6 @@ function generateOperation(operationType: 'query' | 'mutation', fieldName: strin
     if (operationType === 'mutation') queryName = 'Mutate' + queryName;
     else queryName = 'Get' + queryName;
 
-    // Handle Arguments
     let varDefs = '';
     let argsUsage = '';
     
@@ -126,29 +112,63 @@ function generateOperation(operationType: 'query' | 'mutation', fieldName: strin
     return op;
 }
 
-async function main() {
-  const queryType = schema.getQueryType();
-  const mutationType = schema.getMutationType();
+async function fetchSchema(endpoint: string): Promise<GraphQLSchema> {
+    console.log(`Fetching schema from ${endpoint}...`);
+    
+    const introspectionQuery = getIntrospectionQuery();
 
-  let output = '';
+    const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query: introspectionQuery }),
+    });
 
-  if (queryType) {
-    const fields = queryType.getFields();
-    for (const [fieldName, field] of Object.entries(fields)) {
-      output += generateOperation('query', fieldName, field) + '\n\n';
+    if (!response.ok) {
+        throw new Error(`Failed to fetch schema: ${response.status} ${response.statusText}`);
     }
-  }
 
-  if (mutationType) {
-    const fields = mutationType.getFields();
-    for (const [fieldName, field] of Object.entries(fields)) {
-        output += generateOperation('mutation', fieldName, field) + '\n\n';
+    const result = await response.json();
+
+    if (result.errors) {
+        throw new Error(`Schema introspection errors: ${JSON.stringify(result.errors)}`);
     }
-  }
 
-  const formatted = await prettier.format(output, { parser: 'graphql' });
-  fs.writeFileSync(path.join(__dirname, '../all_operations.graphql'), formatted);
-  console.log('Generated all_operations.graphql');
+    const introspectionData = result.data;
+    return buildClientSchema(introspectionData as IntrospectionQuery);
 }
 
-main().catch(console.error);
+export async function generate(endpoint: string, outputPath: string) {
+  try {
+    const schema = await fetchSchema(endpoint);
+
+    const queryType = schema.getQueryType();
+    const mutationType = schema.getMutationType();
+
+    let output = '';
+
+    if (queryType) {
+      const fields = queryType.getFields();
+      for (const [fieldName, field] of Object.entries(fields)) {
+        output += generateOperation('query', fieldName, field) + '\n\n';
+      }
+    }
+
+    if (mutationType) {
+      const fields = mutationType.getFields();
+      for (const [fieldName, field] of Object.entries(fields)) {
+          output += generateOperation('mutation', fieldName, field) + '\n\n';
+      }
+    }
+
+    console.log('Formatting output...');
+    const formatted = await prettier.format(output, { parser: 'graphql' });
+    
+    fs.writeFileSync(outputPath, formatted);
+    console.log(`Generated queries at ${outputPath}`);
+  } catch (error) {
+    console.error('Error generating queries:', error);
+    process.exit(1);
+  }
+}
