@@ -1,10 +1,10 @@
 {
-  "name": "schema-to-query",
+  "name": "endpoint-to-query",
   "version": "1.0.4",
   "description": "",
   "main": "dist/index.js",
   "bin": {
-    "schema-to-query": "dist/index.js"
+    "endpoint-to-query": "dist/index.js"
   },
   "files": [
     "dist"

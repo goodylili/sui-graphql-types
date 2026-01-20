@@ -1,4 +1,4 @@
-# schema-to-query
+# endpoint-to-query
 
 A simple yet powerful CLI tool that introspects a GraphQL endpoint and generates a ready-to-use `.graphql` file containing all available **Queries** and **Mutations**.
 
@@ -20,24 +20,24 @@ It automatically generates selection sets for objects, interfaces, and unions (u
 You don't need to install anything. Just run:
 
 ```bash
-npx schema-to-query <graphql-endpoint-url> [output-file] [--depth <number>]
+npx endpoint-to-query <graphql-endpoint-url> [output-file] [--depth <number>]
 ```
 
 **Examples:**
 
 Generate `query.graphql` in the current directory (default depth 7):
 ```bash
-npx schema-to-query https://graphql.mainnet.sui.io/graphql
+npx endpoint-to-query https://graphql.mainnet.sui.io/graphql
 ```
 
 Generate with a custom depth of 10:
 ```bash
-npx schema-to-query https://graphql.mainnet.sui.io/graphql --depth 10
+npx endpoint-to-query https://graphql.mainnet.sui.io/graphql --depth 10
 ```
 
 Generate to a specific file:
 ```bash
-npx schema-to-query https://graphql.mainnet.sui.io/graphql ./sui-operations.graphql
+npx endpoint-to-query https://graphql.mainnet.sui.io/graphql ./sui-operations.graphql
 ```
 
 ### Global Installation
@@ -45,13 +45,13 @@ npx schema-to-query https://graphql.mainnet.sui.io/graphql ./sui-operations.grap
 If you use it frequently, you can install it globally:
 
 ```bash
-npm install -g schema-to-query
+npm install -g endpoint-to-query
 ```
 
 Then run it anywhere:
 
 ```bash
-schema-to-query https://your-api.com/graphql
+endpoint-to-query https://your-api.com/graphql
 ```
 
 ## Development

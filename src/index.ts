@@ -7,7 +7,7 @@ async function main() {
   const args = process.argv.slice(2);
 
   if (args.length === 0) {
-    console.error('Usage: schema-to-query <graphql-endpoint-url> [output-file] [--depth <number>]');
+    console.error('Usage: endpoint-to-query <graphql-endpoint-url> [output-file] [--depth <number>]');
     process.exit(1);
   }
 
@@ -38,7 +38,7 @@ async function main() {
   }
 
   if (!endpoint) {
-    console.error('Usage: schema-to-query <graphql-endpoint-url> [output-file] [--depth <number>]');
+    console.error('Usage: endpoint-to-query <graphql-endpoint-url> [output-file] [--depth <number>]');
     console.error('Error: Endpoint URL is required');
     process.exit(1);
   }

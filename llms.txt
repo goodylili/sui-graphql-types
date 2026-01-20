@@ -1,4 +1,4 @@
-# schema-to-query
+# endpoint-to-query
 
 A CLI tool for generating GraphQL operations from a schema endpoint.
 
@@ -17,8 +17,8 @@ npx schema-to-query <graphql-endpoint-url> [output-file]
 Or install globally:
 
 ```bash
-npm install -g schema-to-query
-schema-to-query <graphql-endpoint-url>
+npm install -g endpoint-to-query
+endpoint-to-query <graphql-endpoint-url>
 ```
 
 ## Project Structure
