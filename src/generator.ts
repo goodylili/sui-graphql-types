@@ -20,8 +20,8 @@ import type {
 import * as prettier from 'prettier';
 
 // A safe maximum depth to prevent OOM/StackOverflow on large schemas.
-// 7 is generally deep enough for almost all use cases while being safer than "infinite".
-export const DEFAULT_MAX_DEPTH = 7;
+// 3 is generally deep enough for almost all use cases while being safer than "infinite".
+export const DEFAULT_MAX_DEPTH = 3;
 
 function getUnwrappedType(type: GraphQLType): GraphQLType {
   if (isNonNullType(type)) {
