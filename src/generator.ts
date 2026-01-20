@@ -21,7 +21,7 @@ import * as prettier from 'prettier';
 
 // A safe maximum depth to prevent OOM/StackOverflow on large schemas.
 // 7 is generally deep enough for almost all use cases while being safer than "infinite".
-const DEFAULT_MAX_DEPTH = 7;
+export const DEFAULT_MAX_DEPTH = 7;
 
 function getUnwrappedType(type: GraphQLType): GraphQLType {
   if (isNonNullType(type)) {
@@ -151,7 +151,12 @@ async function fetchSchema(endpoint: string): Promise<GraphQLSchema> {
 }
 
 export async function generate(endpoint: string, outputPath: string, maxDepth: number = DEFAULT_MAX_DEPTH) {
-  try {
+    // If maxDepth is 0, we treat it as "Infinity" (relying on cycle detection).
+    // However, to prevent stack overflows, we still need a theoretical limit.
+    // 100 is deep enough to cover any realistic non-cyclic schema structure.
+    const effectiveMaxDepth = maxDepth === 0 ? 100 : maxDepth;
+
+    try {
     const schema = await fetchSchema(endpoint);
 
     const queryType = schema.getQueryType();
@@ -162,24 +167,33 @@ export async function generate(endpoint: string, outputPath: string, maxDepth: n
     if (queryType) {
       const fields = queryType.getFields();
       for (const [fieldName, field] of Object.entries(fields)) {
-        output += generateOperation('query', fieldName, field, maxDepth) + '\n\n';
+        output += generateOperation('query', fieldName, field, effectiveMaxDepth) + '\n\n';
       }
     }
 
     if (mutationType) {
       const fields = mutationType.getFields();
       for (const [fieldName, field] of Object.entries(fields)) {
-          output += generateOperation('mutation', fieldName, field, maxDepth) + '\n\n';
+          output += generateOperation('mutation', fieldName, field, effectiveMaxDepth) + '\n\n';
       }
     }
 
     console.log('Formatting output...');
-    const formatted = await prettier.format(output, { parser: 'graphql' });
+    // If the file is massive, Prettier might crash. We can try/catch this too.
+    try {
+        const formatted = await prettier.format(output, { parser: 'graphql' });
+        fs.writeFileSync(outputPath, formatted);
+    } catch (prettierError) {
+        console.warn('Warning: Output too large for Prettier. Writing raw output...');
+        fs.writeFileSync(outputPath, output);
+    }
     
-    fs.writeFileSync(outputPath, formatted);
     console.log(`Generated queries at ${outputPath}`);
-  } catch (error) {
-    console.error('Error generating queries:', error);
-    process.exit(1);
+  } catch (error: any) {
+    // Re-throw specific errors for the caller to handle
+    if (error instanceof RangeError || error.message?.includes('Invalid string length')) {
+        throw new Error('OUTPUT_TOO_LARGE');
+    }
+    throw error;
   }
 }

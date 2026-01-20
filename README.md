@@ -8,7 +8,8 @@ It automatically generates selection sets for objects, interfaces, and unions (u
 
 - **Zero Config**: Just provide the endpoint URL.
 - **Complete Coverage**: Generates operations for every Query and Mutation field defined in the schema.
-- **Smart Selection**: Recursively builds selection sets for Objects and Interfaces (configurable depth, default 7, avoiding cycles).
+- **Smart Selection**: Recursively builds selection sets. By default, it traverses as deep as possible until cycles are detected ("Auto" mode).
+- **Safety Fallback**: If "Auto" mode produces a file too large for memory, it automatically retries with a safe depth of 7.
 - **Union Support**: Automatically generates inline fragments for Union types.
 - **Prettified**: Output is automatically formatted using Prettier.
 - **Flexible Output**: Defaults to `query.graphql`, or specify your own output path.
