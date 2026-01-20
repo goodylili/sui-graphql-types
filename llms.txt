@@ -1,0 +1,35 @@
+# schema-to-query
+
+A CLI tool for generating GraphQL operations from a schema endpoint.
+
+## Purpose
+
+Introspects a remote GraphQL endpoint and generates a local `.graphql` file containing all available Query and Mutation operations with smart selection sets.
+
+## Usage
+
+Run directly via npx:
+
+```bash
+npx schema-to-query <graphql-endpoint-url> [output-file]
+```
+
+Or install globally:
+
+```bash
+npm install -g schema-to-query
+schema-to-query <graphql-endpoint-url>
+```
+
+## Project Structure
+
+- `src/index.ts`: CLI entry point. Parses arguments and calls the generator.
+- `src/generator.ts`: Core logic. Fetches schema, introspects types, and generates GraphQL operations.
+- `dist/`: Compiled JavaScript files (published to npm).
+
+## Key Features
+
+- **Zero Config**: Only requires an endpoint URL.
+- **Deep Selection**: Recursively generates fields up to full depth (avoiding cycles).
+- **Union/Interface Support**: Handles complex types with inline fragments.
+- **Prettier**: Output is automatically formatted.

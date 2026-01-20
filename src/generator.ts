@@ -19,7 +19,9 @@ import type {
 } from 'graphql';
 import * as prettier from 'prettier';
 
-const MAX_DEPTH = 3;
+// A safe maximum depth to prevent OOM/StackOverflow on large schemas.
+// 7 is generally deep enough for almost all use cases while being safer than "infinite".
+const MAX_SAFE_DEPTH = 7;
 
 function getUnwrappedType(type: GraphQLType): GraphQLType {
   if (isNonNullType(type)) {
@@ -31,12 +33,22 @@ function getUnwrappedType(type: GraphQLType): GraphQLType {
   return type;
 }
 
-function generateFieldSelection(type: GraphQLType, depth: number = 0): string {
-  if (depth > MAX_DEPTH) {
-    return '';
+function generateFieldSelection(type: GraphQLType, visitedTypes: Set<string> = new Set(), depth: number = 0): string {
+  if (depth > MAX_SAFE_DEPTH) {
+      return '';
   }
 
   const unwrappedType = getUnwrappedType(type);
+  const typeName = 'name' in unwrappedType ? (unwrappedType as any).name : '';
+
+  if (typeName && visitedTypes.has(typeName)) {
+      return '';
+  }
+
+  const newVisitedTypes = new Set(visitedTypes);
+  if (typeName) {
+      newVisitedTypes.add(typeName);
+  }
 
   if (isScalarType(unwrappedType)) {
     return '';
@@ -50,11 +62,10 @@ function generateFieldSelection(type: GraphQLType, depth: number = 0): string {
         if (isScalarType(fieldType)) {
             return field.name;
         }
-        if (depth < MAX_DEPTH) {
-            const subSelection = generateFieldSelection(field.type, depth + 1);
-            if (subSelection) {
-                return `${field.name} { ${subSelection} }`;
-            }
+        
+        const subSelection = generateFieldSelection(field.type, newVisitedTypes, depth + 1);
+        if (subSelection) {
+            return `${field.name} { ${subSelection} }`;
         }
         return null;
       })
@@ -67,7 +78,7 @@ function generateFieldSelection(type: GraphQLType, depth: number = 0): string {
   if (isUnionType(unwrappedType)) {
       const types = unwrappedType.getTypes();
       const selection = types.map(t => {
-          const subSelection = generateFieldSelection(t, depth + 1);
+          const subSelection = generateFieldSelection(t, newVisitedTypes, depth + 1);
            if (subSelection) {
                 return `... on ${t.name} { ${subSelection} }`;
             }
@@ -101,7 +112,7 @@ function generateOperation(operationType: 'query' | 'mutation', fieldName: strin
         argsUsage = `(${usages.join(', ')})`;
     }
 
-    const selection = generateFieldSelection(field.type, 1);
+    const selection = generateFieldSelection(field.type);
     
     let op = `${operationType} ${queryName}${varDefs} {
         ${fieldName}${argsUsage} ${selection ? `{

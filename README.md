@@ -2,13 +2,13 @@
 
 A simple yet powerful CLI tool that introspects a GraphQL endpoint and generates a ready-to-use `.graphql` file containing all available **Queries** and **Mutations**.
 
-It automatically generates selection sets for objects, interfaces, and unions (up to a depth of 3), making it incredibly easy to explore a new API or bootstrap your client-side queries.
+It automatically generates selection sets for objects, interfaces, and unions (up to a depth of 7 to avoid massive files), making it incredibly easy to explore a new API or bootstrap your client-side queries.
 
 ## Features
 
 - **Zero Config**: Just provide the endpoint URL.
 - **Complete Coverage**: Generates operations for every Query and Mutation field defined in the schema.
-- **Smart Selection**: Recursively builds selection sets for Objects and Interfaces (default depth: 3).
+- **Smart Selection**: Recursively builds selection sets for Objects and Interfaces (safe depth of 7, avoiding cycles).
 - **Union Support**: Automatically generates inline fragments for Union types.
 - **Prettified**: Output is automatically formatted using Prettier.
 - **Flexible Output**: Defaults to `query.graphql`, or specify your own output path.
